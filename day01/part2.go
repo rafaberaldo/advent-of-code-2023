@@ -1,22 +1,33 @@
 package day01
 
 import (
+	"log"
+	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func Part2() int {
+	input, err := os.ReadFile("day01/data.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	rows := strings.Split(string(input), "\n")
 	count := 0
 
-	input := GetInput()
-	for row := 0; row < len(input); row++ {
-		value, err := computeValue(input[row])
+	for row := 0; row < len(rows); row++ {
+		if rows[row] == "" {
+			continue
+		}
+
+		value, err := computeValue(rows[row])
 		if value < 10 || value > 99 {
-			panic("??")
+			log.Fatal("??")
 		}
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		count += value
 	}
@@ -63,5 +74,4 @@ func computeValue(str string) (int, error) {
 	}
 
 	return strconv.Atoi(rowValue)
-
 }

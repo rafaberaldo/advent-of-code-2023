@@ -1,8 +1,11 @@
 package day03
 
 import (
+	"log"
+	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type PartCoord struct {
@@ -13,7 +16,13 @@ type PartCoord struct {
 }
 
 func Part2() int {
-	var input = GetInput()
+	input, err := os.ReadFile("day03/data.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows := strings.Split(string(input), "\n")
+
 	var count = 0
 	var partsCoord = []PartCoord{}
 	var reNum = regexp.MustCompile(`\d+|[^\.]`)
@@ -26,9 +35,9 @@ func Part2() int {
 		return result
 	}
 
-	for row := 0; row < len(input); row++ {
-		var iMatches = reNum.FindAllStringIndex(input[row], -1)
-		var matches = reNum.FindAllString(input[row], -1)
+	for row := 0; row < len(rows); row++ {
+		var iMatches = reNum.FindAllStringIndex(rows[row], -1)
+		var matches = reNum.FindAllString(rows[row], -1)
 
 		for i := 0; i < len(iMatches); i++ {
 			var part = PartCoord{row, intRange(iMatches[i][0], iMatches[i][1]), matches[i], nil}

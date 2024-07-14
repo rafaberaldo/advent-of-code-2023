@@ -1,16 +1,27 @@
 package day02
 
 import (
+	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 func Part2() int {
+	input, err := os.ReadFile("day02/data.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows := strings.Split(string(input), "\n")
+
 	var count = 0
-	var input = GetInput()
-	for row := 0; row < len(input); row++ {
-		count += parseGameP2(input[row])
+	for row := 0; row < len(rows); row++ {
+		if rows[row] == "" {
+			continue
+		}
+		count += parseGameP2(rows[row])
 	}
 	return count
 }

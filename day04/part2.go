@@ -1,18 +1,29 @@
 package day04
 
 import (
+	"log"
+	"os"
 	"strconv"
 	"strings"
 )
 
 func Part2() int {
-	var input = GetInput()
+	input, err := os.ReadFile("day04/data.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows := strings.Split(string(input), "\n")
+
 	var count = 0
 
-	var totalPerCard = make([]int, len(input))
+	var totalPerCard = make([]int, len(rows))
 
-	for row := 0; row < len(input); row++ {
-		var numbers = strings.Split(strings.Split(input[row], ":")[1], "|")
+	for row := 0; row < len(rows); row++ {
+		if rows[row] == "" {
+			continue
+		}
+		var numbers = strings.Split(strings.Split(rows[row], ":")[1], "|")
 		var realNumbers = strings.Split(numbers[0], " ")
 		var myNumbers = strings.Split(numbers[1], " ")
 
