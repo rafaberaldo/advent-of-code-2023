@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -135,21 +136,37 @@ func Part2() int {
 		return false
 	}
 
-	var minFinalLocation int
-	for i := 0; i < math.MaxInt; i++ {
-		fmt.Printf("Testing location %#v\n", i)
-		var humidity = getValue(humidityToLocation, i)
-		var temperature = getValue(temperatureToHumidity, humidity)
-		var light = getValue(lightToTemperature, temperature)
-		var water = getValue(waterToLight, light)
-		var fertilizer = getValue(fertilizerToWater, water)
-		var soil = getValue(soilToFertilizer, fertilizer)
-		var seed = getValue(seedToSoil, soil)
-		if hasSeed(seeds, seed) {
-			minFinalLocation = i
-			break
+	var findMinFinalLocation = func(min int, max int, c chan int) {
+		fmt.Printf("Starting goroutine (%#v)\n", min)
+		for i := min; i <= max; i++ {
+			// fmt.Printf("Testing location %#v\n", i)
+			var humidity = getValue(humidityToLocation, i)
+			var temperature = getValue(temperatureToHumidity, humidity)
+			var light = getValue(lightToTemperature, temperature)
+			var water = getValue(waterToLight, light)
+			var fertilizer = getValue(fertilizerToWater, water)
+			var soil = getValue(soilToFertilizer, fertilizer)
+			var seed = getValue(seedToSoil, soil)
+			if hasSeed(seeds, seed) {
+				fmt.Printf("Stopping goroutne (%#v)\n", min)
+				c <- i
+				break
+			}
 		}
 	}
 
-	return minFinalLocation
+	var found []int
+	var c = make(chan int)
+	var maxInt = math.MaxInt32 / 4
+	// Not sure why it's taking longer when using a for loop
+	go findMinFinalLocation(0, maxInt, c)
+	go findMinFinalLocation(maxInt, maxInt*2, c)
+	go findMinFinalLocation(maxInt*2, maxInt*3, c)
+	go findMinFinalLocation(maxInt*3, maxInt*4, c)
+	found = append(found, <-c)
+	found = append(found, <-c)
+	found = append(found, <-c)
+	found = append(found, <-c)
+
+	return slices.Min(found)
 }
