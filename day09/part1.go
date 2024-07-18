@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ func Part1() int {
 		log.Fatal(err)
 	}
 
-	var histories = parseInput(input)
+	var histories = parseInput(input, false)
 	var result = calculateNextHistorySum(histories)
 
 	elapsed := time.Since(start)
@@ -31,7 +32,7 @@ func Part1() int {
 	return result
 }
 
-func parseInput(input []byte) []History {
+func parseInput(input []byte, reverse bool) []History {
 	var lines = strings.Split(string(input), "\n")
 	var histories []History
 
@@ -46,6 +47,9 @@ func parseInput(input []byte) []History {
 		for _, field := range fields {
 			var n, _ = strconv.Atoi(field)
 			values = append(values, n)
+		}
+		if reverse {
+			slices.Reverse(values)
 		}
 		history.result = values[len(values)-1] // save the last value as result to be summed with others
 		history.valuesList = append(history.valuesList, values)
