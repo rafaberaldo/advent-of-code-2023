@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	fmt.Println("Result:", day10.Part1())
+	fmt.Println("Result:", day10.Part2())
 }
