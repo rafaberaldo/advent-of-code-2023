@@ -21,7 +21,7 @@ func Part1() int {
 	var result = 0
 	for _, p := range puzzle {
 		var memo = make(map[string]int)
-		result += findPattern(p, 0, &memo)
+		result += findPattern(p, &memo)
 	}
 
 	elapsed := time.Since(start)
@@ -72,12 +72,8 @@ func toStringSlice(numbers []int8) string {
 	return strings.Join(result, ",")
 }
 
-func findPattern(p Puzzle, count int, memo *map[string]int) int {
+func findPattern(p Puzzle, memo *map[string]int) int {
 	// fmt.Printf("Testing %#v -- %#v\n", p.line, p.damaged)
-
-	if v, ok := (*memo)[p.key()]; ok {
-		return count + v
-	}
 
 	if len(p.line) == 0 {
 		return 0
@@ -85,39 +81,26 @@ func findPattern(p Puzzle, count int, memo *map[string]int) int {
 
 	if len(p.damaged) == 0 {
 		if !strings.Contains(p.line, "#") {
-			return count + 1
+			return 1
 		}
-
 		return 0
 	}
 
-	if len(p.line) == 1 {
-		if p.line[0] == '.' {
-			return 0
-		}
-
-		if len(p.damaged) > 1 {
-			return 0
-		}
-
-		if p.damaged[0] > 1 {
-			return 0
-		}
-
-		return count + 1
+	if v, ok := (*memo)[p.key()]; ok {
+		return v
 	}
 
 	if p.line[0] == '.' {
 		var next = Puzzle{p.line[1:], p.damaged}
-		(*memo)[next.key()] = findPattern(next, count, memo)
+		(*memo)[next.key()] = findPattern(next, memo)
 		return (*memo)[next.key()]
 	}
 
 	if p.line[0] == '?' {
 		var next1 = Puzzle{"#" + p.line[1:], p.damaged}
 		var next2 = Puzzle{p.line[1:], p.damaged}
-		(*memo)[next1.key()] = findPattern(next1, count, memo)
-		(*memo)[next2.key()] = findPattern(next2, count, memo)
+		(*memo)[next1.key()] = findPattern(next1, memo)
+		(*memo)[next2.key()] = findPattern(next2, memo)
 		return (*memo)[next1.key()] + (*memo)[next2.key()]
 	}
 
@@ -126,24 +109,18 @@ func findPattern(p Puzzle, count int, memo *map[string]int) int {
 		if brokenCount == int(p.damaged[0]) {
 			if brokenCount+1 >= len(p.line) {
 				if len(p.damaged) == 1 {
-					return count + 1
+					return 1
 				}
 				return 0
 			}
 			var next = Puzzle{p.line[brokenCount+1:], p.damaged[1:]}
-			(*memo)[next.key()] = findPattern(next, count, memo)
-			return (*memo)[next.key()]
-		}
-
-		if brokenCount > int(p.damaged[0]) {
-			return 0
+			return findPattern(next, memo)
 		}
 
 		if brokenCount < len(p.line) && p.line[brokenCount] == '?' {
 			var nextLine = p.line[:brokenCount] + "#" + p.line[brokenCount+1:]
 			var next = Puzzle{nextLine, p.damaged}
-			(*memo)[next.key()] = findPattern(next, count, memo)
-			return (*memo)[next.key()]
+			return findPattern(next, memo)
 		}
 	}
 

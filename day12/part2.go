@@ -28,7 +28,7 @@ func Part2() int {
 			defer wg.Done()
 			defer mutex.Unlock()
 			var memo = make(map[string]int)
-			var count = findPattern(p, 0, &memo)
+			var count = findPattern(p, &memo)
 			mutex.Lock()
 			result += count
 		}()
