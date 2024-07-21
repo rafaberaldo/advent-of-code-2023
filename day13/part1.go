@@ -1,13 +1,12 @@
 package day13
 
 import (
+	"aoc2023/assert"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/rafaberaldo/advent-of-code/assert"
 )
 
 func Part1() int {
