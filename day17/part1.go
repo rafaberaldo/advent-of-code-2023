@@ -1,6 +1,7 @@
 package day17
 
 import (
+	"aoc2023/assert"
 	"cmp"
 	"fmt"
 	"log"
@@ -20,7 +21,7 @@ type Vertex struct {
 	point Point
 	dist  int
 	dir   Direction
-	prev  VertexState
+	prev  *Vertex
 	steps int
 }
 
@@ -51,6 +52,8 @@ func Part1() int {
 		maze,
 		Point{0, 0},
 		Point{len(maze[0]) - 1, len(maze) - 1},
+		1,
+		3,
 	)
 
 	elapsed := time.Since(start)
@@ -84,13 +87,15 @@ var dirs = []Direction{
 	{-1, 0}, // left
 }
 
-func findPath(maze [][]int, init Point, end Point) int {
+func findPath(maze [][]int, init Point, end Point, minSteps int, maxSteps int) int {
 	var visited = make(map[VertexState]bool)
 	var dests []Vertex
 	dests = append(dests, Vertex{point: init})
 
 	var endVertex Vertex
 	for {
+		assert.Assert(len(dests) > 0, "should have items in queue!")
+
 		slices.SortFunc(dests, func(a Vertex, b Vertex) int { return cmp.Compare(a.dist, b.dist) })
 		var current = dests[0]
 		dests = dests[1:]
@@ -107,7 +112,11 @@ func findPath(maze [][]int, init Point, end Point) int {
 		}
 
 		for _, dir := range dirs {
-			if current.dir == dir && current.steps == 3 {
+			if current.dir != dir && current.steps < minSteps && current.point != init {
+				continue
+			}
+
+			if current.dir == dir && current.steps == maxSteps {
 				continue
 			}
 
@@ -131,7 +140,7 @@ func findPath(maze [][]int, init Point, end Point) int {
 				point: point,
 				dist:  current.dist + maze[point.y][point.x],
 				dir:   dir,
-				prev:  current.state(),
+				prev:  &current,
 				steps: steps,
 			}
 
@@ -143,5 +152,35 @@ func findPath(maze [][]int, init Point, end Point) int {
 		}
 	}
 
+	// var path []Point
+	// var current = endVertex
+	// for current.point != init {
+	// 	path = append(path, current.point)
+	// 	current = *current.prev
+	// }
+	// path = append(path, init)
+	// slices.Reverse(path)
+
+	// for _, p := range path {
+	// 	printMaze(maze, p)
+	// }
+
 	return endVertex.dist
 }
+
+// func printMaze(maze [][]int, current Point) {
+// 	time.Sleep(time.Millisecond * 150)
+// 	var newMaze = make([][]string, len(maze))
+// 	for i := range maze {
+// 		newMaze[i] = make([]string, len(maze[i]))
+// 		for j := range maze[i] {
+// 			newMaze[i][j] = strconv.Itoa(maze[i][j])
+// 		}
+// 	}
+
+// 	newMaze[current.y][current.x] = "X"
+// 	for _, m := range newMaze {
+// 		fmt.Println(m)
+// 	}
+// 	fmt.Printf("\n\n")
+// }
