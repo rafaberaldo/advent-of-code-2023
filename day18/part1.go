@@ -32,9 +32,8 @@ type Direction struct {
 }
 
 type Instruction struct {
-	dir   Direction
-	len   int
-	color string
+	dir Direction
+	len int
 }
 
 type Point struct {
@@ -66,7 +65,7 @@ func parseInput(input []byte) []Instruction {
 		}
 		var fields = strings.Fields(line)
 		var length, _ = strconv.Atoi(fields[1])
-		instructions = append(instructions, Instruction{getDirection(fields[0]), length, fields[2]})
+		instructions = append(instructions, Instruction{getDirection(fields[0]), length})
 	}
 
 	return instructions
