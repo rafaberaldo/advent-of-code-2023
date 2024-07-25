@@ -19,35 +19,17 @@ func Part1() int {
 
 	var instMap, parts = parseInput(input)
 
-	var accepted []Part
+	var result = 0
 	for _, part := range parts {
-		var currentInsts = instMap["in"]
-
-	outer:
-		for {
-			for i := 0; i < len(currentInsts); i++ {
-				var inst = currentInsts[i]
-				var res, ok = inst.process(part)
-				if !ok {
-					continue
-				}
-				if res == "A" {
-					accepted = append(accepted, part)
-					break outer
-				}
-				if res == "R" {
-					break outer
-				}
-				currentInsts = instMap[res]
-				break
-			}
+		if isPartAccepted(instMap, part) {
+			result += part.sum()
 		}
 	}
 
 	elapsed := time.Since(start)
 	fmt.Printf("Done in %s\n", elapsed)
 
-	return calculateResult(accepted)
+	return result
 }
 
 type Instruction string
@@ -60,10 +42,10 @@ func (inst Instruction) process(part Part) (string, bool) {
 		var value, err = strconv.Atoi(split[0][2:])
 		assert.Assert(err == nil, "error while converting value to int")
 
-		if str[1] == '<' && part.valueFrom(str[0]) < value {
+		if str[1] == '<' && part.get(str[0]) < value {
 			return result, true
 		}
-		if str[1] == '>' && part.valueFrom(str[0]) > value {
+		if str[1] == '>' && part.get(str[0]) > value {
 			return result, true
 		}
 		return "", false
@@ -79,7 +61,7 @@ type Part struct {
 	s int
 }
 
-func (p Part) valueFrom(c byte) int {
+func (p Part) get(c byte) int {
 	switch c {
 	case 'x':
 		return p.x
@@ -90,7 +72,7 @@ func (p Part) valueFrom(c byte) int {
 	case 's':
 		return p.s
 	}
-	panic("could not find value to return!")
+	panic("could not find attr to return!")
 }
 
 func (p Part) sum() int {
@@ -145,10 +127,23 @@ func parseInput(input []byte) (map[string][]Instruction, []Part) {
 	return instructionsMap, parts
 }
 
-func calculateResult(parts []Part) int {
-	var result = 0
-	for _, part := range parts {
-		result += part.sum()
+func isPartAccepted(instMap map[string][]Instruction, part Part) bool {
+	var currentInsts = instMap["in"]
+
+	for {
+		for _, inst := range currentInsts {
+			var res, ok = inst.process(part)
+			if !ok {
+				continue
+			}
+			if res == "A" {
+				return true
+			}
+			if res == "R" {
+				return false
+			}
+			currentInsts = instMap[res]
+			break
+		}
 	}
-	return result
 }
