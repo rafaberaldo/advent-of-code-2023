@@ -106,7 +106,7 @@ func findPath(maze [][]int, init Point, end Point, minSteps int, maxSteps int) i
 
 		visited[current.state()] = true
 
-		if current.point == end {
+		if current.point == end && current.steps >= minSteps {
 			endVertex = current
 			break
 		}
