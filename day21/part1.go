@@ -51,9 +51,9 @@ var dirs = []Direction{
 	{-1, 0}, // left
 }
 
-const MAX_STEPS = 64
-
 func search(maze [][]string, start Point) map[Point]bool {
+	const MAX_STEPS = 64
+
 	var visited = make(map[Point]bool)
 	var steps = make(map[Point]int)
 	var result = make(map[Point]bool)
