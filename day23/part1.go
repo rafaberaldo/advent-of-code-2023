@@ -16,7 +16,7 @@ func Part1() int {
 	assert.Assert(err == nil, "error opening the file: %v", err)
 
 	maze := parseInput(input)
-	result := search(maze, Point{1, 0, 0, Direction{}})
+	result := search(maze, Point{x: 1, y: 0}, Point{x: len(maze[0]) - 2, y: len(maze) - 1})
 
 	elapsed := time.Since(started)
 	fmt.Printf("Done in %s\n", elapsed)
@@ -42,12 +42,10 @@ var RIGHT = Direction{+1, 0}
 var DOWN = Direction{0, +1}
 var LEFT = Direction{-1, 0}
 
-func search(maze [][]string, start Point) int {
+func search(maze [][]string, start, end Point) int {
 	var visited = make(map[Point]bool)
 	var queue = []Point{start}
 	var finalists []Point
-	var endX = len(maze[0]) - 2
-	var endY = len(maze) - 1
 
 	for len(queue) > 0 {
 		var current = queue[0]
@@ -59,12 +57,12 @@ func search(maze [][]string, start Point) int {
 
 		visited[current] = true
 
-		if current.x == endX && current.y == endY {
+		if current.x == end.x && current.y == end.y {
 			finalists = append(finalists, current)
 			continue
 		}
 
-		var backward = Direction{-current.Direction.dx, -current.Direction.dy}
+		var backward = Direction{-current.dir.dx, -current.dir.dy}
 		var dirs = dirsExcept(backward)
 		for _, dir := range dirs {
 			var edge = Point{current.x + dir.dx, current.y + dir.dy, current.steps + 1, dir}

@@ -6,5 +6,10 @@ type Direction struct {
 
 type Point struct {
 	x, y, steps int
-	Direction
+	dir         Direction
+}
+
+func (p *Point) state() Point {
+	// basically the point without steps
+	return Point{x: p.x, y: p.y}
 }
