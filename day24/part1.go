@@ -72,11 +72,10 @@ func simulate(pairs []Pair) int {
 	var result = 0
 
 	for _, pair := range pairs {
-		if !segmentIntersect(pair.a.line(), pair.b.line()) {
+		if !hasIntersection(pair.lines()) {
 			continue
 		}
-		x, y, ok := intersection(pair.a.line(), pair.b.line())
-		if !ok || !inRange(x, y) {
+		if !inRange(intersection(pair.lines())) {
 			continue
 		}
 		result++
@@ -89,28 +88,24 @@ func inRange(x, y float64) bool {
 	return P_MIN <= x && x <= P_MAX && P_MIN <= y && y <= P_MAX
 }
 
-func segmentIntersect(a, b Line) bool {
-	ccw := func(A, B, C Point) bool {
-		return (C.y-A.y)*(B.x-A.x) > (B.y-A.y)*(C.x-A.x)
-	}
+func ccw(a, b, c Point) bool {
+	return (c.y-a.y)*(b.x-a.x) > (b.y-a.y)*(c.x-a.x)
+}
 
-	A := Point{a.x1, a.y1}
-	B := Point{a.x2, a.y2}
-	C := Point{b.x1, b.y1}
-	D := Point{b.x2, b.y2}
-
-	return ccw(A, C, D) != ccw(B, C, D) && ccw(A, B, C) != ccw(A, B, D)
+// https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+func hasIntersection(a, b, c, d Point) bool {
+	return ccw(a, c, d) != ccw(b, c, d) && ccw(a, b, c) != ccw(a, b, d)
 }
 
 // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-func intersection(a, b Line) (float64, float64, bool) {
-	den := (a.x1-a.x2)*(b.y1-b.y2) - (a.y1-a.y2)*(b.x1-b.x2)
-	if den == 0 {
-		return 0, 0, false
-	}
+func intersection(a, b, c, d Point) (float64, float64) {
+	den := (a.x-b.x)*(c.y-d.y) - (a.y-b.y)*(c.x-d.x)
+	assert.Assert(den != 0, "lines do not intersect!")
 
-	x := ((a.x1*a.y2-a.y1*a.x2)*(b.x1-b.x2) - (a.x1-a.x2)*(b.x1*b.y2-b.y1*b.x2)) / den
-	y := ((a.x1*a.y2-a.y1*a.x2)*(b.y1-b.y2) - (a.y1-a.y2)*(b.x1*b.y2-b.y1*b.x2)) / den
+	n1 := a.x*b.y - a.y*b.x
+	n2 := c.x*d.y - c.y*d.x
+	x := (n1*(c.x-d.x) - (a.x-b.x)*n2) / den
+	y := (n1*(c.y-d.y) - (a.y-b.y)*n2) / den
 
-	return x, y, true
+	return x, y
 }
