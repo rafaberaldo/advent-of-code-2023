@@ -32,30 +32,30 @@ func Part1() int {
 	input, err := os.ReadFile("day25/data.txt")
 	assert.Assert(err == nil, "error opening the file: %v", err)
 
-	compMap, _ := parseInput(input)
+	compMap, keys := parseInput(input)
 
-	keys := mapKeys(compMap)
-	visitedCount := make(map[string]int)
 	// we don't actually need to run on all of them since the input is huge
 	// use 15 for the test data!
-	const MAX_KEYS = 200
+	const MAX_KEYS = 100
+
+	visitedCount := make(map[string]int)
 	for i, k1 := range keys[:MAX_KEYS] {
 		for _, k2 := range keys[:i] {
 			search(compMap, k1, k2, visitedCount)
 		}
 	}
 
-	// Brute force ordererd by most visited links
-	// Time may vary between 6-20 secs
+	// Brute force sorted by most visited links
+	// Time may vary between 3-10 secs
 	result := 0
 	mostVisited := getMostVisited(visitedCount)
 outer:
-	for i, l1 := range mostVisited {
+	for i, l1 := range mostVisited[:50] {
 		for j, l2 := range mostVisited[:i] {
 			for _, l3 := range mostVisited[:j] {
-				tempMap := removeLink(compMap, l1.link, l2.link, l3.link)
-				if totals, ok := totalLinks(tempMap, keys); ok {
-					result = totals
+				tempMap := removeLinks(compMap, l1.link, l2.link, l3.link)
+				if total, ok := totalLinks(tempMap, keys); ok {
+					result = total
 					break outer
 				}
 			}
@@ -68,19 +68,16 @@ outer:
 	return result
 }
 
-func parseInput(input []byte) (map[string][]string, [][]string) {
+func parseInput(input []byte) (map[string][]string, []string) {
 	lines := strings.Split(string(input), "\n")
 	compMap := make(map[string][]string)
-	var links [][]string
+
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
 		fields := strings.Fields(strings.Replace(line, ":", "", 1))
 		compMap[fields[0]] = fields[1:]
-		for _, v := range fields[1:] {
-			links = append(links, []string{fields[0], v})
-		}
 	}
 
 	for k := range compMap {
@@ -91,7 +88,12 @@ func parseInput(input []byte) (map[string][]string, [][]string) {
 		}
 	}
 
-	return compMap, links
+	var keys []string
+	for k := range compMap {
+		keys = append(keys, k)
+	}
+
+	return compMap, keys
 }
 
 type LinkCount struct {
@@ -185,15 +187,7 @@ func countLinks(compMap map[string][]string, start string) int {
 	return len(seen)
 }
 
-func mapKeys[K comparable, T any](m map[K]T) []K {
-	result := make([]K, 0, len(m))
-	for k := range m {
-		result = append(result, k)
-	}
-	return result
-}
-
-func removeLink(compMap map[string][]string, p1, p2, p3 []string) map[string][]string {
+func removeLinks(compMap map[string][]string, p1, p2, p3 []string) map[string][]string {
 	result := make(map[string][]string)
 	var verifyAndAppend = func(k string, pair []string) bool {
 		if k == pair[0] {
