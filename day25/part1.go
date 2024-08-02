@@ -1,21 +1,17 @@
 /*
 	SVG graph generated with Graphviz with cmd `neato -Tsvg input.dot > graph.svg`.
 
-	graph {
-		jqt -- {rhn xhk nvd}
-		rsh -- {frs pzl lsr}
-		xhk -- {hfx}
-		cmg -- {qnr nvd lhk bvb}
-		rhn -- {xhk bvb hfx}
-		bvb -- {xhk hfx}
-		pzl -- {lsr hfx nvd}
-		qnr -- {nvd}
-		ntq -- {jqt hfx bvb xhk}
-		nvd -- {lhk}
-		lsr -- {lhk}
-		rzs -- {qnr cmg lsr rsh}
-		frs -- {qnr lhk lsr}
-	}
+	Since the description says we have to disconnect at least half the components,
+	we know there are two clusters with three links:
+
+	  * * *       * * *
+  * * * * * - * * * * *
+  * * * * * - * * * * *
+  * * * * * - * * * * *
+    * * *       * * *
+
+	Theoretically, running BFS on every pair (as start/end) and counting all seen links,
+	the ones we're looking for are the ones most seen.
 */
 
 package day25
@@ -23,6 +19,7 @@ package day25
 import (
 	"aoc2023/assert"
 	_slices "aoc2023/lib"
+	"cmp"
 	"fmt"
 	"os"
 	"slices"
@@ -36,9 +33,34 @@ func Part1() int {
 	assert.Assert(err == nil, "error opening the file: %v", err)
 
 	compMap, _ := parseInput(input)
+
 	keys := mapKeys(compMap)
-	tempMap := removeLink(compMap, []string{"tmb", "gpj"}, []string{"rhh", "mtc"}, []string{"njn", "xtx"})
-	result, _ := totalLinks(tempMap, keys)
+	visitedCount := make(map[string]int)
+	// we don't actually need to run on all of them since the input is huge
+	// use 15 for the test data!
+	const MAX_KEYS = 200
+	for i, k1 := range keys[:MAX_KEYS] {
+		for _, k2 := range keys[:i] {
+			search(compMap, k1, k2, visitedCount)
+		}
+	}
+
+	// Brute force ordererd by most visited links
+	// Time may vary between 6-20 secs
+	result := 0
+	mostVisited := getMostVisited(visitedCount)
+outer:
+	for i, l1 := range mostVisited {
+		for j, l2 := range mostVisited[:i] {
+			for _, l3 := range mostVisited[:j] {
+				tempMap := removeLink(compMap, l1.link, l2.link, l3.link)
+				if totals, ok := totalLinks(tempMap, keys); ok {
+					result = totals
+					break outer
+				}
+			}
+		}
+	}
 
 	elapsed := time.Since(started)
 	fmt.Printf("Done in %s\n", elapsed)
@@ -49,7 +71,7 @@ func Part1() int {
 func parseInput(input []byte) (map[string][]string, [][]string) {
 	lines := strings.Split(string(input), "\n")
 	compMap := make(map[string][]string)
-	var pairs [][]string
+	var links [][]string
 	for _, line := range lines {
 		if line == "" {
 			continue
@@ -57,7 +79,7 @@ func parseInput(input []byte) (map[string][]string, [][]string) {
 		fields := strings.Fields(strings.Replace(line, ":", "", 1))
 		compMap[fields[0]] = fields[1:]
 		for _, v := range fields[1:] {
-			pairs = append(pairs, []string{fields[0], v})
+			links = append(links, []string{fields[0], v})
 		}
 	}
 
@@ -69,7 +91,23 @@ func parseInput(input []byte) (map[string][]string, [][]string) {
 		}
 	}
 
-	return compMap, pairs
+	return compMap, links
+}
+
+type LinkCount struct {
+	link  []string
+	count int
+}
+
+func getMostVisited(visited map[string]int) []LinkCount {
+	result := make([]LinkCount, 0, len(visited))
+	for k, v := range visited {
+		result = append(result, LinkCount{strings.Split(k, "-"), v})
+	}
+	slices.SortFunc(result, func(a, b LinkCount) int {
+		return cmp.Compare(b.count, a.count)
+	})
+	return result
 }
 
 func totalLinks(compMap map[string][]string, keys []string) (int, bool) {
@@ -86,6 +124,40 @@ func totalLinks(compMap map[string][]string, keys []string) (int, bool) {
 	delta := len(keys) - found
 	result := delta * found
 	return result, true
+}
+
+func search(compMap map[string][]string, start, end string, visited map[string]int) {
+	seen := make(map[string]bool)
+	queue := []string{start}
+
+	for len(queue) > 0 {
+		comp := queue[0]
+		queue = queue[1:]
+
+		if seen[comp] {
+			continue
+		}
+
+		seen[comp] = true
+
+		if comp == end {
+			return
+		}
+
+		for _, edge := range compMap[comp] {
+			if seen[edge] {
+				continue
+			}
+
+			if _, ok := visited[comp+"-"+edge]; ok {
+				visited[comp+"-"+edge]++
+			} else {
+				visited[edge+"-"+comp]++
+			}
+
+			queue = append(queue, edge)
+		}
+	}
 }
 
 func countLinks(compMap map[string][]string, start string) int {
